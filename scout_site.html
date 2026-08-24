@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>موقع الكشافة</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f3f6f4;color:#173b2d}
+header{background:#075c42;color:#fff;padding:18px 25px;display:flex;justify-content:space-between;align-items:center}
+header h1{margin:0;font-size:25px}
+.layout{display:flex;min-height:calc(100vh - 68px)}
+aside{width:220px;background:#063f2e;padding:15px}
+aside button{width:100%;border:0;background:transparent;color:#fff;padding:14px;margin:3px 0;border-radius:8px;text-align:right;font-size:16px;cursor:pointer}
+aside button:hover,aside button.active{background:#087452}
+main{flex:1;padding:25px}
+.page{display:none}.page.active{display:block}
+.card{background:#fff;padding:22px;border-radius:14px;margin-bottom:20px;box-shadow:0 2px 10px #0001}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+input,textarea,select{width:100%;padding:12px;margin:8px 0 14px;border:1px solid #ccc;border-radius:8px;font-size:15px}
+textarea{min-height:120px}
+.btn{background:#087452;color:white;border:0;border-radius:8px;padding:11px 18px;cursor:pointer}
+.btn:hover{background:#064f39}
+.danger{background:#c0392b}
+.verse{background:#e9f5ec;padding:25px;border-radius:12px;border-right:5px solid #087452;line-height:2}
+.message,.service{padding:17px;border:1px solid #eee;border-radius:10px;margin:10px 0}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px;border-bottom:1px solid #ddd;text-align:center}
+th{background:#075c42;color:#fff}
+.status{border:0;padding:8px 14px;border-radius:20px;cursor:pointer}
+.present{background:#d8f5df;color:#137333}.absent{background:#ffe0df;color:#b3261e}.late{background:#fff0c7;color:#a56a00}
+.countdown{font-size:24px;font-weight:bold;color:#087452;margin-top:12px}
+@media(max-width:750px){.layout{display:block}aside{width:100%}.grid{grid-template-columns:1fr 1fr}main{padding:15px}}
+@media(max-width:500px){.grid{grid-template-columns:1fr}header h1{font-size:20px}}
+</style>
+</head>
+<body>
+
+<header>
+<h1>⚜️ موقع الكشافة</h1>
+<div>مرحباً 👋</div>
+</header>
+
+<div class="layout">
+<aside>
+<button class="active" onclick="openPage('home',this)">🏠 الرئيسية</button>
+<button onclick="openPage('spiritual',this)">📖 النوتة الروحية</button>
+<button onclick="openPage('messages',this)">📢 الرسائل</button>
+<button onclick="openPage('attendance',this)">✅ الحضور والغياب</button>
+<button onclick="openPage('members',this)">👥 الأعضاء</button>
+<button onclick="openPage('services',this)">📅 الخدمات</button>
+</aside>
+
+<main>
+
+<section id="home" class="page active">
+<h2>الرئيسية</h2>
+<div class="grid">
+<div class="card"><h3>👥 الأعضاء</h3><h1 id="memberCount">0</h1></div>
+<div class="card"><h3>📢 الرسائل</h3><h1 id="messageCount">0</h1></div>
+<div class="card"><h3>📅 الخدمات</h3><h1 id="serviceCount">0</h1></div>
+</div>
+<div class="card verse">
+<h2>📖 نوتة روحية اليوم</h2>
+<p>«أستطيع كل شيء في المسيح الذي يقويني»</p>
+<b>فيلبي 4: 13</b>
+</div>
+<div class="card">
+<h2>⏰ الخدمة القادمة</h2>
+<p id="nextService">لا توجد خدمة قادمة.</p>
+<div class="countdown" id="countdown">--</div>
+</div>
+</section>
+
+<section id="spiritual" class="page">
+<h2>📖 النوتة الروحية</h2>
+<div class="card">
+<div class="verse"><b>آية اليوم</b><p>«كن أميناً إلى الموت فسأعطيك إكليل الحياة»</p><b>رؤيا 2: 10</b></div>
+<h3>✍️ تأملك</h3>
+<textarea id="note" placeholder="اكتب تأملك أو صلاتك هنا..."></textarea>
+<button class="btn" onclick="saveNote()">💾 حفظ</button>
+<p id="noteMsg"></p>
+</div>
+</section>
+
+<section id="messages" class="page">
+<h2>📢 الرسائل</h2>
+<div class="card">
+<input id="msgTitle" placeholder="عنوان الرسالة">
+<textarea id="msgText" placeholder="اكتب الرسالة..."></textarea>
+<button class="btn" onclick="addMessage()">📤 إضافة الرسالة</button>
+</div>
+<div id="messagesList"></div>
+</section>
+
+<section id="attendance" class="page">
+<h2>✅ الحضور والغياب</h2>
+<div class="card">
+<input type="date" id="attendanceDate">
+<table>
+<thead><tr><th>#</th><th>الاسم</th><th>الحالة</th></tr></thead>
+<tbody id="attendanceTable"></tbody>
+</table>
+<br>
+<button class="btn" onclick="saveAttendance()">💾 حفظ</button>
+</div>
+</section>
+
+<section id="members" class="page">
+<h2>👥 الأعضاء</h2>
+<div class="card">
+<input id="memberInput" placeholder="اسم العضو">
+<button class="btn" onclick="addMember()">➕ إضافة عضو</button>
+</div>
+<div class="card"><div id="membersList"></div></div>
+</section>
+
+<section id="services" class="page">
+<h2>📅 الخدمات</h2>
+<div class="card">
+<input id="serviceName" placeholder="اسم الخدمة">
+<input id="serviceDate" type="datetime-local">
+<input id="servicePlace" placeholder="مكان الخدمة">
+<button class="btn" onclick="addService()">➕ إضافة خدمة</button>
+</div>
+<div id="servicesList"></div>
+</section>
+
+</main>
+</div>
+
+<script>
+const get = (key, fallback) => {
+    try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+    catch(e) { return fallback; }
+};
+
+let members = get("scout_members", ["يوحنا مينا","مارك سامح","بولا ريمون","كيرلس أشرف","مريم فادي"]);
+let messages = get("scout_messages", []);
+let services = get("scout_services", []);
+let attendance = get("scout_attendance", {});
+
+function saveData(){
+    localStorage.setItem("scout_members",JSON.stringify(members));
+    localStorage.setItem("scout_messages",JSON.stringify(messages));
+    localStorage.setItem("scout_services",JSON.stringify(services));
+    localStorage.setItem("scout_attendance",JSON.stringify(attendance));
+}
+
+function openPage(id,btn){
+    document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    document.querySelectorAll("aside button").forEach(x=>x.classList.remove("active"));
+    btn.classList.add("active");
+}
+
+function saveNote(){
+    localStorage.setItem("scout_note",document.getElementById("note").value);
+    document.getElementById("noteMsg").textContent="✅ تم حفظ النوتة";
+}
+
+function addMember(){
+    const input=document.getElementById("memberInput");
+    const name=input.value.trim();
+    if(!name){alert("اكتب اسم العضو");return}
+    members.push(name); input.value=""; saveData(); render();
+}
+
+function deleteMember(i){
+    members.splice(i,1); saveData(); render();
+}
+
+function addMessage(){
+    const title=document.getElementById("msgTitle").value.trim();
+    const text=document.getElementById("msgText").value.trim();
+    if(!title||!text){alert("اكتب العنوان والرسالة");return}
+    messages.unshift({title,text,date:new Date().toLocaleString("ar-EG")});
+    document.getElementById("msgTitle").value="";
+    document.getElementById("msgText").value="";
+    saveData(); render();
+}
+
+function deleteMessage(i){
+    messages.splice(i,1); saveData(); render();
+}
+
+function addService(){
+    const name=document.getElementById("serviceName").value.trim();
+    const date=document.getElementById("serviceDate").value;
+    const place=document.getElementById("servicePlace").value.trim();
+    if(!name||!date){alert("اكتب اسم الخدمة والميعاد");return}
+    services.push({name,date,place});
+    document.getElementById("serviceName").value="";
+    document.getElementById("serviceDate").value="";
+    document.getElementById("servicePlace").value="";
+    saveData(); render();
+}
+
+function deleteService(i){
+    services.splice(i,1); saveData(); render();
+}
+
+function changeStatus(name){
+    const date=document.getElementById("attendanceDate").value;
+    if(!attendance[date]) attendance[date]={};
+    const old=attendance[date][name]||"حاضر";
+    attendance[date][name]=old==="حاضر"?"غائب":old==="غائب"?"متأخر":"حاضر";
+    renderAttendance();
+}
+
+function saveAttendance(){
+    saveData();
+    alert("✅ تم حفظ الحضور والغياب");
+}
+
+function renderMembers(){
+    const box=document.getElementById("membersList");
+    box.innerHTML=members.length?"":"لا يوجد أعضاء";
+    members.forEach((name,i)=>{
+        box.innerHTML+=`<div class="message">👤 ${escapeHTML(name)}
+        <button class="btn danger" onclick="deleteMember(${i})" style="float:left">حذف</button></div>`;
+    });
+    document.getElementById("memberCount").textContent=members.length;
+}
+
+function renderMessages(){
+    const box=document.getElementById("messagesList");
+    box.innerHTML="";
+    messages.forEach((m,i)=>{
+        box.innerHTML+=`<div class="message"><h3>📢 ${escapeHTML(m.title)}</h3>
+        <p>${escapeHTML(m.text)}</p><small>${m.date}</small><br><br>
+        <button class="btn danger" onclick="deleteMessage(${i})">حذف</button></div>`;
+    });
+    document.getElementById("messageCount").textContent=messages.length;
+}
+
+function renderAttendance(){
+    const date=document.getElementById("attendanceDate").value;
+    const box=document.getElementById("attendanceTable");
+    box.innerHTML="";
+    members.forEach((name,i)=>{
+        const status=(attendance[date]&&attendance[date][name])||"حاضر";
+        const cls=status==="حاضر"?"present":status==="غائب"?"absent":"late";
+        box.innerHTML+=`<tr><td>${i+1}</td><td>${escapeHTML(name)}</td>
+        <td><button class="status ${cls}" onclick="changeStatus('${escapeJS(name)}')">${status}</button></td></tr>`;
+    });
+}
+
+function renderServices(){
+    services.sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const box=document.getElementById("servicesList");
+    box.innerHTML="";
+    services.forEach((s,i)=>{
+        box.innerHTML+=`<div class="service card"><h3>📅 ${escapeHTML(s.name)}</h3>
+        <p>🕐 ${new Date(s.date).toLocaleString("ar-EG")}</p>
+        <p>📍 ${escapeHTML(s.place||"غير محدد")}</p>
+        <button class="btn danger" onclick="deleteService(${i})">حذف</button></div>`;
+    });
+    document.getElementById("serviceCount").textContent=services.length;
+    updateCountdown();
+}
+
+function updateCountdown(){
+    const now=new Date();
+    const next=services.filter(s=>new Date(s.date)>now)[0];
+    if(!next){
+        document.getElementById("nextService").textContent="لا توجد خدمة قادمة.";
+        document.getElementById("countdown").textContent="--";
+        return;
+    }
+    document.getElementById("nextService").textContent=next.name+" — "+(next.place||"");
+    const diff=new Date(next.date)-now;
+    const d=Math.floor(diff/86400000);
+    const h=Math.floor(diff/3600000)%24;
+    const m=Math.floor(diff/60000)%60;
+    const s=Math.floor(diff/1000)%60;
+    document.getElementById("countdown").textContent=`${d} يوم : ${h} ساعة : ${m} دقيقة : ${s} ثانية`;
+}
+
+function escapeHTML(x){
+    return String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function escapeJS(x){return String(x).replace(/\\/g,"\\\\").replace(/'/g,"\\'");}
+
+function render(){
+    renderMembers();
+    renderMessages();
+    renderAttendance();
+    renderServices();
+    document.getElementById("note").value=localStorage.getItem("scout_note")||"";
+}
+
+document.getElementById("attendanceDate").value=new Date().toISOString().slice(0,10);
+document.getElementById("attendanceDate").addEventListener("change",renderAttendance);
+render();
+setInterval(updateCountdown,1000);
+</script>
+</body>
+</html>
